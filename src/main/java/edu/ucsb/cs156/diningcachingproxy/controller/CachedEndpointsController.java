@@ -22,12 +22,9 @@ public class CachedEndpointsController {
 
   @Autowired private CachedResponseRepository cachedResponseRepository;
 
-  public record CachedEndpointDTO(String requestPath, int responseStatus, long hitCount) {
+  public record CachedEndpointDTO(String requestPath, long hitCount) {
     public CachedEndpointDTO(CachedResponse cachedResponse) {
-      this(
-          cachedResponse.getRequestPath(),
-          cachedResponse.getResponseStatus(),
-          cachedResponse.getHitCount());
+      this(cachedResponse.getRequestPath(), cachedResponse.getHitCount());
     }
   }
 
@@ -39,14 +36,14 @@ public class CachedEndpointsController {
   }
 
   /*
-  @Operation(summary = "Purge a single cached entry")
-  @PreAuthorize("hasRole('ROLE_ADMIN')")
-  @DeleteMapping("")
-  public void deleteEndpointEntry(@Parameter(name = "id") @RequestParam String id) {
-    if (!cachedResponseRepository.existsById(id)) {
-      throw new EntityNotFoundException(CachedResponse.class, id);
-    }
-    cachedResponseRepository.deleteById(id);
+  public Object deleteUCSBDate(@Parameter(name = "id") @RequestParam Long id) {
+    UCSBDate ucsbDate =
+        ucsbDateRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(UCSBDate.class, id));
+
+    ucsbDateRepository.delete(ucsbDate);
+    return genericMessage("UCSBDate with id %s deleted".formatted(id));
   }
-  */
+    */
 }
