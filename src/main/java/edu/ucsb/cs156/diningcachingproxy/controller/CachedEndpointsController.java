@@ -22,9 +22,12 @@ public class CachedEndpointsController {
 
   @Autowired private CachedResponseRepository cachedResponseRepository;
 
-  public record CachedEndpointDTO(String requestPath, long hitCount) {
+  public record CachedEndpointDTO(String requestPath, int responseStatus, long hitCount) {
     public CachedEndpointDTO(CachedResponse cachedResponse) {
-      this(cachedResponse.getRequestPath(), cachedResponse.getHitCount());
+      this(
+          cachedResponse.getRequestPath(),
+          cachedResponse.getResponseStatus(),
+          cachedResponse.getHitCount());
     }
   }
 
@@ -34,4 +37,16 @@ public class CachedEndpointsController {
   public List<CachedEndpointDTO> allEndpoints() {
     return cachedResponseRepository.findAll().stream().map(CachedEndpointDTO::new).toList();
   }
+
+  /*
+  @Operation(summary = "Purge a single cached entry")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @DeleteMapping("")
+  public void deleteEndpointEntry(@Parameter(name = "id") @RequestParam String id) {
+    if (!cachedResponseRepository.existsById(id)) {
+      throw new EntityNotFoundException(CachedResponse.class, id);
+    }
+    cachedResponseRepository.deleteById(id);
+  }
+  */
 }
