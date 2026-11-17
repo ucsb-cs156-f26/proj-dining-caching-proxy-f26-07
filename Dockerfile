@@ -14,7 +14,7 @@ RUN rm -rf /var/lib/apt/lists/*
 # Set JAVA_HOME environment variable
 ENV JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 ENV PATH="$JAVA_HOME/bin:$PATH"
-//new
+
 ARG MAVEN_VERSION=3.9.16
 RUN curl -fsSL https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
     | tar -xz -C /opt \
