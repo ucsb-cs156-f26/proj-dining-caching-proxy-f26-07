@@ -4,6 +4,8 @@ import edu.ucsb.cs156.diningcachingproxy.collections.CachedResponse;
 import edu.ucsb.cs156.diningcachingproxy.collections.CachedResponseRepository;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -29,6 +31,7 @@ public class DiningProxyService {
   private final StatsService statsService;
   private final RestTemplate restTemplate;
   private final String upstreamHost;
+  private final ConcurrentMap<String, Long> missCounts = new ConcurrentHashMap<>();
 
   public DiningProxyService(
       CachedResponseRepository cachedResponseRepository,
@@ -54,6 +57,7 @@ public class DiningProxyService {
     }
 
     statsService.recordMiss();
+    long missCount = missCounts.merge(requestPath, 1L, Long::sum);
 
     HttpHeaders headers = new HttpHeaders();
     headers.setAccept(List.of(MediaType.APPLICATION_JSON));
@@ -81,6 +85,7 @@ public class DiningProxyService {
               .responseStatus(upstreamResponse.getStatusCode().value())
               .responseBody(upstreamResponse.getBody())
               .hitCount(1)
+              .missCount(missCount)
               .build());
     }
 

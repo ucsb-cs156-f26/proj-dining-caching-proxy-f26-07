@@ -53,6 +53,7 @@ public class DiningProxyServiceTests {
             .responseStatus(200)
             .responseBody("[\"cached\"]")
             .hitCount(4)
+            .missCount(3)
             .build();
     when(cachedResponseRepository.findByRequestPath("/dining/commons/v1/"))
         .thenReturn(Optional.of(cached));
@@ -72,6 +73,7 @@ public class DiningProxyServiceTests {
                     .responseStatus(200)
                     .responseBody("[\"cached\"]")
                     .hitCount(5)
+                    .missCount(3)
                     .build()));
     mockServer.verify();
   }
@@ -103,6 +105,7 @@ public class DiningProxyServiceTests {
                     .responseStatus(200)
                     .responseBody("[\"fresh\"]")
                     .hitCount(1)
+                    .missCount(1)
                     .build()));
     mockServer.verify();
   }
@@ -172,6 +175,49 @@ public class DiningProxyServiceTests {
 
     assertEquals(HttpStatus.NOT_MODIFIED, response.getStatusCode());
     verify(cachedResponseRepository, times(0)).save(any());
+    mockServer.verify();
+  }
+
+  @Test
+  public void failed_requests_are_included_in_miss_count_when_response_is_cached() {
+    String path = "/dining/commons/v1/";
+    when(cachedResponseRepository.findByRequestPath(path)).thenReturn(Optional.empty());
+
+    mockServer
+        .expect(requestTo(UPSTREAM_HOST + path))
+        .andRespond(withStatus(HttpStatus.NOT_FOUND).body("not found"));
+
+    mockServer
+        .expect(requestTo(UPSTREAM_HOST + path))
+        .andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR).body("boom"));
+
+    mockServer
+        .expect(requestTo(UPSTREAM_HOST + path))
+        .andRespond(withSuccess("[\"fresh\"]", MediaType.APPLICATION_JSON));
+
+    ResponseEntity<String> first = diningProxyService.proxyGet(path, null, null);
+    ResponseEntity<String> second = diningProxyService.proxyGet(path, null, null);
+
+    assertEquals(HttpStatus.NOT_FOUND, first.getStatusCode());
+    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, second.getStatusCode());
+    verify(cachedResponseRepository, times(0)).save(any());
+
+    ResponseEntity<String> third = diningProxyService.proxyGet(path, null, null);
+
+    assertEquals(HttpStatus.OK, third.getStatusCode());
+    assertEquals("[\"fresh\"]", third.getBody());
+    verify(statsService, times(3)).recordMiss();
+    verify(statsService, times(0)).recordHit();
+    verify(cachedResponseRepository, times(1))
+        .save(
+            eq(
+                CachedResponse.builder()
+                    .requestPath(path)
+                    .responseStatus(200)
+                    .responseBody("[\"fresh\"]")
+                    .hitCount(1)
+                    .missCount(3)
+                    .build()));
     mockServer.verify();
   }
 }

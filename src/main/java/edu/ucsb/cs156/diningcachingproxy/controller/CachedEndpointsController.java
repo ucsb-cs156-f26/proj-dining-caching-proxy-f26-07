@@ -22,13 +22,16 @@ public class CachedEndpointsController {
 
   @Autowired private CachedResponseRepository cachedResponseRepository;
 
-  public record CachedEndpointDTO(String requestPath, long hitCount) {
+  public record CachedEndpointDTO(String requestPath, long hitCount, long missCount) {
     public CachedEndpointDTO(CachedResponse cachedResponse) {
-      this(cachedResponse.getRequestPath(), cachedResponse.getHitCount());
+      this(
+          cachedResponse.getRequestPath(),
+          cachedResponse.getHitCount(),
+          cachedResponse.getMissCount());
     }
   }
 
-  @Operation(summary = "List all API endpoints the proxy has cached, with hit counts")
+  @Operation(summary = "List all API endpoints the proxy has cached, with hit and miss counts")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @GetMapping("")
   public List<CachedEndpointDTO> allEndpoints() {

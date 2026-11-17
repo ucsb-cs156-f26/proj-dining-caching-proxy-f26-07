@@ -34,13 +34,14 @@ public class CachedEndpointsControllerTests extends ControllerTestCase {
 
   @WithMockUser(roles = {"ADMIN"})
   @Test
-  public void admin_can_list_cached_endpoints_with_hit_counts() throws Exception {
+  public void admin_can_list_cached_endpoints_with_hit_and_miss_counts() throws Exception {
     CachedResponse commons =
         CachedResponse.builder()
             .requestPath("/dining/commons/v1/")
             .responseStatus(200)
             .responseBody("[]")
             .hitCount(5)
+            .missCount(2)
             .build();
     CachedResponse menu =
         CachedResponse.builder()
@@ -48,6 +49,7 @@ public class CachedEndpointsControllerTests extends ControllerTestCase {
             .responseStatus(200)
             .responseBody("{}")
             .hitCount(1)
+            .missCount(1)
             .build();
     when(cachedResponseRepository.findAll()).thenReturn(Arrays.asList(commons, menu));
 
@@ -56,9 +58,9 @@ public class CachedEndpointsControllerTests extends ControllerTestCase {
 
     List<CachedEndpointsController.CachedEndpointDTO> expected =
         List.of(
-            new CachedEndpointsController.CachedEndpointDTO("/dining/commons/v1/", 5),
+            new CachedEndpointsController.CachedEndpointDTO("/dining/commons/v1/", 5, 2),
             new CachedEndpointsController.CachedEndpointDTO(
-                "/dining/menu/v1/2024-08-16/carrillo", 1));
+                "/dining/menu/v1/2024-08-16/carrillo", 1, 1));
     String expectedJson = mapper.writeValueAsString(expected);
     assertEquals(expectedJson, response.getResponse().getContentAsString());
   }
