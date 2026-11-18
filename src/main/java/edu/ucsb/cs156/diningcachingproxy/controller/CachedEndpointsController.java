@@ -22,11 +22,13 @@ public class CachedEndpointsController {
 
   @Autowired private CachedResponseRepository cachedResponseRepository;
 
-  public record CachedEndpointDTO(String requestPath, int responseStatus, long hitCount) {
+  public record CachedEndpointDTO(
+      String requestPath, int responseStatus, String responseBody, long hitCount) {
     public CachedEndpointDTO(CachedResponse cachedResponse) {
       this(
           cachedResponse.getRequestPath(),
           cachedResponse.getResponseStatus(),
+          cachedResponse.getResponseBody(),
           cachedResponse.getHitCount());
     }
   }
