@@ -7,7 +7,6 @@ RUN apt-get update
 RUN apt-get install -y openjdk-25-jdk  
 RUN apt-get install -y  curl  
 RUN apt-get install -y  bash  
-RUN apt-get install -y maven  
 RUN apt-get install -y  python3 
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
@@ -15,6 +14,14 @@ RUN rm -rf /var/lib/apt/lists/*
 # Set JAVA_HOME environment variable
 ENV JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 ENV PATH="$JAVA_HOME/bin:$PATH"
+
+ARG MAVEN_VERSION=3.9.16
+RUN curl -fsSL https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+    | tar -xz -C /opt \
+ && ln -s /opt/apache-maven-${MAVEN_VERSION} /opt/maven
+ENV MAVEN_HOME=/opt/maven
+ENV PATH="${MAVEN_HOME}/bin:${PATH}"
+RUN mvn -version
 
 # Verify installation
 RUN java -version
