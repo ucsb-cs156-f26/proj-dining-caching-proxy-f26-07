@@ -22,20 +22,22 @@ import org.springframework.web.bind.annotation.RestController;
 
   @Autowired private CachedResponseRepository cachedResponseRepository;
 
-<span class="fc" id="L25">  public record CachedEndpointDTO(String requestPath, int responseStatus, long hitCount) {</span>
+<span class="fc" id="L25">  public record CachedEndpointDTO(</span>
+      String requestPath, int responseStatus, String responseBody, long hitCount) {
     public CachedEndpointDTO(CachedResponse cachedResponse) {
-<span class="fc" id="L27">      this(</span>
-<span class="fc" id="L28">          cachedResponse.getRequestPath(),</span>
-<span class="fc" id="L29">          cachedResponse.getResponseStatus(),</span>
-<span class="fc" id="L30">          cachedResponse.getHitCount());</span>
-<span class="fc" id="L31">    }</span>
+<span class="fc" id="L28">      this(</span>
+<span class="fc" id="L29">          cachedResponse.getRequestPath(),</span>
+<span class="fc" id="L30">          cachedResponse.getResponseStatus(),</span>
+<span class="fc" id="L31">          cachedResponse.getResponseBody(),</span>
+<span class="fc" id="L32">          cachedResponse.getHitCount());</span>
+<span class="fc" id="L33">    }</span>
   }
 
   @Operation(summary = &quot;List all API endpoints the proxy has cached, with hit counts&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @GetMapping(&quot;&quot;)
   public List&lt;CachedEndpointDTO&gt; allEndpoints() {
-<span class="fc" id="L38">    return cachedResponseRepository.findAll().stream().map(CachedEndpointDTO::new).toList();</span>
+<span class="fc" id="L40">    return cachedResponseRepository.findAll().stream().map(CachedEndpointDTO::new).toList();</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>

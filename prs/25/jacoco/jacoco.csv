@@ -21,7 +21,7 @@ diningcachingproxy,edu.ucsb.cs156.diningcachingproxy.controller,HealthController
 diningcachingproxy,edu.ucsb.cs156.diningcachingproxy.controller,AdminsController,0,82,0,2,0,16,0,8,0,7
 diningcachingproxy,edu.ucsb.cs156.diningcachingproxy.controller,UserInfoController,0,6,0,0,0,2,0,2,0,2
 diningcachingproxy,edu.ucsb.cs156.diningcachingproxy.controller,DiningProxyController,0,70,0,14,0,15,0,10,0,3
-diningcachingproxy,edu.ucsb.cs156.diningcachingproxy.controller,CachedEndpointsController.CachedEndpointDTO,0,21,0,0,0,6,0,2,0,2
+diningcachingproxy,edu.ucsb.cs156.diningcachingproxy.controller,CachedEndpointsController.CachedEndpointDTO,0,26,0,0,0,7,0,2,0,2
 diningcachingproxy,edu.ucsb.cs156.diningcachingproxy.controller,StatsController,0,19,0,0,0,6,0,2,0,2
 diningcachingproxy,edu.ucsb.cs156.diningcachingproxy.controller,AdminsController.AdminDTO,0,18,0,0,0,3,0,2,0,2
 diningcachingproxy,edu.ucsb.cs156.diningcachingproxy.controller,HostTrackingController,0,12,0,0,0,3,0,3,0,3
