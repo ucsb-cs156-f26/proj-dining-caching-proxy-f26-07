@@ -34,16 +34,4 @@ public class CachedEndpointsController {
   public List<CachedEndpointDTO> allEndpoints() {
     return cachedResponseRepository.findAll().stream().map(CachedEndpointDTO::new).toList();
   }
-
-  /*
-  public Object deleteUCSBDate(@Parameter(name = "id") @RequestParam Long id) {
-    UCSBDate ucsbDate =
-        ucsbDateRepository
-            .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException(UCSBDate.class, id));
-
-    ucsbDateRepository.delete(ucsbDate);
-    return genericMessage("UCSBDate with id %s deleted".formatted(id));
-  }
-    */
 }
