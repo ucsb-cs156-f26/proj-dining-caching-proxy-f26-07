@@ -82,6 +82,8 @@ public class DiningProxyIntegrationTests {
             .getResponse()
             .getContentAsString();
 
-    assertEquals("[{\"requestPath\":\"/dining/commons/v1/\",\"hitCount\":2}]", endpointsJson);
+    assertEquals(
+        "[{\"requestPath\":\"/dining/commons/v1/\",\"responseStatus\":200,\"hitCount\":2}]",
+        endpointsJson);
   }
 }
