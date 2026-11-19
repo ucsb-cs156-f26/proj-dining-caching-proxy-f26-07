@@ -56,7 +56,7 @@ public class CachedEndpointsController extends ApiController {
     return cachedResponseRepository.findAll().stream().map(CachedEndpointDTO::new).toList();
   }
 
-  @Operation(summary = "Purge a single cached entry")
+  @Operation(summary = "Delete a single cached endpoint entry")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @DeleteMapping("/delete")
   public Object deleteEndpointEntry(
