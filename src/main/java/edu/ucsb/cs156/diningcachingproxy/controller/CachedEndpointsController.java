@@ -54,7 +54,8 @@ public class CachedEndpointsController extends ApiController {
   @Operation(summary = "Purge a single cached entry")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @DeleteMapping("/delete")
-  public Object deleteEndpointEntry(@Parameter(name = "id") @RequestParam String requestPath) {
+  public Object deleteEndpointEntry(
+      @Parameter(name = "requestPath") @RequestParam String requestPath) {
     CachedResponse cachedResponse =
         cachedResponseRepository
             .findByRequestPath(requestPath)
