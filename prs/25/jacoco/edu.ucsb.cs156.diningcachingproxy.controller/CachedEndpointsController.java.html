@@ -41,9 +41,9 @@ import org.springframework.web.bind.annotation.RestController;
     private static String maybeTruncateResponseBody(String responseBody) {
 <span class="fc" id="L42">      String truncateFlag = &quot;...[truncated]&quot;;</span>
 <span class="fc" id="L43">      int maxResponseBodyLength = 128;</span>
-<span class="pc bpc" id="L44" title="1 of 2 branches missed.">      if (responseBody.length() &gt; maxResponseBodyLength) {</span>
-<span class="nc" id="L45">        responseBody =</span>
-<span class="nc" id="L46">            responseBody.substring(0, maxResponseBodyLength - truncateFlag.length()) + truncateFlag;</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">      if (responseBody.length() &gt; maxResponseBodyLength) {</span>
+<span class="fc" id="L45">        responseBody =</span>
+<span class="fc" id="L46">            responseBody.substring(0, maxResponseBodyLength - truncateFlag.length()) + truncateFlag;</span>
       }
 <span class="fc" id="L48">      return responseBody;</span>
     }
@@ -56,17 +56,17 @@ import org.springframework.web.bind.annotation.RestController;
 <span class="fc" id="L56">    return cachedResponseRepository.findAll().stream().map(CachedEndpointDTO::new).toList();</span>
   }
 
-  @Operation(summary = &quot;Purge a single cached entry&quot;)
+  @Operation(summary = &quot;Delete a single cached endpoint entry&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @DeleteMapping(&quot;/delete&quot;)
   public Object deleteEndpointEntry(
       @Parameter(name = &quot;requestPath&quot;) @RequestParam String requestPath) {
-<span class="nc" id="L64">    CachedResponse cachedResponse =</span>
+<span class="fc" id="L64">    CachedResponse cachedResponse =</span>
         cachedResponseRepository
-<span class="nc" id="L66">            .findByRequestPath(requestPath)</span>
-<span class="nc" id="L67">            .orElseThrow(() -&gt; new EntityNotFoundException(CachedResponse.class, requestPath));</span>
-<span class="nc" id="L68">    cachedResponseRepository.delete(cachedResponse);</span>
-<span class="nc" id="L69">    return genericMessage(&quot;Cached entry for request path %s deleted&quot;.formatted(requestPath));</span>
+<span class="fc" id="L66">            .findByRequestPath(requestPath)</span>
+<span class="fc" id="L67">            .orElseThrow(() -&gt; new EntityNotFoundException(CachedResponse.class, requestPath));</span>
+<span class="fc" id="L68">    cachedResponseRepository.delete(cachedResponse);</span>
+<span class="fc" id="L69">    return genericMessage(&quot;Cached entry for request path %s deleted&quot;.formatted(requestPath));</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
