@@ -25,7 +25,15 @@ export type HostCount = {
   count: number;
 };
 
+export type CachedEndpoint = {
+  requestPath: string;
+  responseStatus: number;
+  responseBody: string;
+  hitCount: number;
+};
+
 const hostsEndpoint = "/api/admin/hosts";
+const cachedEndpointsEndpoint = "/api/admin/endpoints";
 
 // A host that hasn't (yet, or successfully) resolved to a hostname still displays as its own
 // raw IPv4 address - that's exactly the signal to show a retry button for it.
@@ -50,6 +58,18 @@ export default function HomePage(): React.JSX.Element {
     [hostsEndpoint],
     // Stryker disable next-line StringLiteral: axios treats a falsy method as "GET"
     { method: "GET", url: hostsEndpoint },
+    // Stryker disable next-line all : don't test default value of empty list
+    [],
+    false,
+    { enabled: isAdmin },
+  );
+
+  const { data: cachedEndpoints } = useBackend<CachedEndpoint[]>(
+    // Stryker disable next-line ArrayDeclaration: this is the only query using this key in
+    // any given test, so an empty key behaves identically in isolation.
+    [cachedEndpointsEndpoint],
+    // Stryker disable next-line StringLiteral: axios treats a falsy method as "GET"
+    { method: "GET", url: cachedEndpointsEndpoint },
     // Stryker disable next-line all : don't test default value of empty list
     [],
     false,
@@ -95,6 +115,42 @@ export default function HomePage(): React.JSX.Element {
     },
   ];
 
+  /*
+  export type CachedEndpoint = {
+  requestPath: string;
+  responseStatus: number;
+  responseBody: string;
+  hitCount: number;
+}
+  */
+
+  const cachedEndpointColumns = [
+    { header: "Request Path", accessorKey: "requestPath" },
+    { header: "Hit Count", accessorKey: "hitCount" },
+    { header: "Response Status", accessorKey: "responseStatus" },
+    { header: "Response Body", accessorKey: "responseBody" },
+    /*
+    {
+      header: "",
+      id: "retry",
+      cell: ({ cell }: { cell: Cell<HostCount, unknown> }) => {
+        if (!looksLikeIpAddress(cell.row.original.host)) {
+          return null;
+        }
+        return (
+          <Button
+            size="sm"
+            onClick={() => retryMutation.mutate(cell.row.original.host)}
+            data-testid={`HomePage-hosts-table-cell-row-${cell.row.index}-col-retry-button`}
+          >
+            Retry
+          </Button>
+        );
+      },
+    },
+    */
+  ];
+
   return (
     <BasicLayout>
       <div className="pt-2">
@@ -134,6 +190,15 @@ export default function HomePage(): React.JSX.Element {
               data={hostCounts ?? []}
               columns={hostColumns}
               testid="HomePage-hosts-table"
+            />
+            <h2>Cached Endpoints</h2>
+            <OurTable
+              // Stryker disable next-line ArrayDeclaration: initialData=[] above guarantees
+              // cachedEntryCounts is never actually undefined at runtime; this is TypeScript-only
+              // defensiveness (the useBackend generic wrapper defeats initialData narrowing).
+              data={cachedEndpoints ?? []}
+              columns={cachedEndpointColumns}
+              testid="HomePage-cachedEntries-table"
             />
           </>
         )}
