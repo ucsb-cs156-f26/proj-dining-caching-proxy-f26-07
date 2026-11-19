@@ -29,31 +29,38 @@ import org.springframework.web.bind.annotation.RestController;
 <span class="fc" id="L29">  public record CachedEndpointDTO(</span>
       String requestPath, int responseStatus, String responseBody, long hitCount) {
     public CachedEndpointDTO(CachedResponse cachedResponse) {
-<span class="fc" id="L32">      this(</span>
-<span class="fc" id="L33">          cachedResponse.getRequestPath(),</span>
-<span class="fc" id="L34">          cachedResponse.getResponseStatus(),</span>
-<span class="fc" id="L35">          cachedResponse.getResponseBody(),</span>
-<span class="fc" id="L36">          cachedResponse.getHitCount());</span>
-<span class="fc" id="L37">    }</span>
+      // TODO: test truncation
+<span class="fc" id="L33">      String respBody = cachedResponse.getResponseBody();</span>
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">      if (respBody.length() &gt; 100) {</span>
+<span class="nc" id="L35">        String truncateMsg = &quot;...[truncated]&quot;;</span>
+<span class="nc" id="L36">        respBody = respBody.substring(0, 100 - truncateMsg.length()) + truncateMsg;</span>
+      }
+
+<span class="fc" id="L39">      this(</span>
+<span class="fc" id="L40">          cachedResponse.getRequestPath(),</span>
+<span class="fc" id="L41">          cachedResponse.getResponseStatus(),</span>
+          respBody,
+<span class="fc" id="L43">          cachedResponse.getHitCount());</span>
+<span class="fc" id="L44">    }</span>
   }
 
   @Operation(summary = &quot;List all API endpoints the proxy has cached, with hit counts&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @GetMapping(&quot;&quot;)
   public List&lt;CachedEndpointDTO&gt; allEndpoints() {
-<span class="fc" id="L44">    return cachedResponseRepository.findAll().stream().map(CachedEndpointDTO::new).toList();</span>
+<span class="fc" id="L51">    return cachedResponseRepository.findAll().stream().map(CachedEndpointDTO::new).toList();</span>
   }
 
   @Operation(summary = &quot;Purge a single cached entry&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @DeleteMapping(&quot;/delete&quot;)
-  public Object deleteEndpointEntry(@Parameter(name = &quot;id&quot;) @RequestParam String id) {
-<span class="nc" id="L51">    CachedResponse cachedResponse =</span>
+  public Object deleteEndpointEntry(@Parameter(name = &quot;id&quot;) @RequestParam String requestPath) {
+<span class="nc" id="L58">    CachedResponse cachedResponse =</span>
         cachedResponseRepository
-<span class="nc" id="L53">            .findById(id)</span>
-<span class="nc" id="L54">            .orElseThrow(() -&gt; new EntityNotFoundException(CachedResponse.class, id));</span>
-<span class="nc" id="L55">    cachedResponseRepository.deleteById(id);</span>
-<span class="nc" id="L56">    return genericMessage(&quot;Cached entry with id %s deleted&quot;.formatted(id));</span>
+<span class="nc" id="L60">            .findByRequestPath(requestPath)</span>
+<span class="nc" id="L61">            .orElseThrow(() -&gt; new EntityNotFoundException(CachedResponse.class, requestPath));</span>
+<span class="nc" id="L62">    cachedResponseRepository.delete(cachedResponse);</span>
+<span class="nc" id="L63">    return genericMessage(&quot;Cached entry for request path %s deleted&quot;.formatted(requestPath));</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
