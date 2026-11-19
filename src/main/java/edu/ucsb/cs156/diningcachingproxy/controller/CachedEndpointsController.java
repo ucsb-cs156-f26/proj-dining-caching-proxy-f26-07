@@ -29,10 +29,17 @@ public class CachedEndpointsController extends ApiController {
   public record CachedEndpointDTO(
       String requestPath, int responseStatus, String responseBody, long hitCount) {
     public CachedEndpointDTO(CachedResponse cachedResponse) {
+      // TODO: test truncation
+      String respBody = cachedResponse.getResponseBody();
+      if (respBody.length() > 100) {
+        String truncateMsg = "...[truncated]";
+        respBody = respBody.substring(0, 100 - truncateMsg.length()) + truncateMsg;
+      }
+
       this(
           cachedResponse.getRequestPath(),
           cachedResponse.getResponseStatus(),
-          cachedResponse.getResponseBody(),
+          respBody,
           cachedResponse.getHitCount());
     }
   }
@@ -47,12 +54,12 @@ public class CachedEndpointsController extends ApiController {
   @Operation(summary = "Purge a single cached entry")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @DeleteMapping("/delete")
-  public Object deleteEndpointEntry(@Parameter(name = "id") @RequestParam String id) {
+  public Object deleteEndpointEntry(@Parameter(name = "id") @RequestParam String requestPath) {
     CachedResponse cachedResponse =
         cachedResponseRepository
-            .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException(CachedResponse.class, id));
-    cachedResponseRepository.deleteById(id);
-    return genericMessage("Cached entry with id %s deleted".formatted(id));
+            .findByRequestPath(requestPath)
+            .orElseThrow(() -> new EntityNotFoundException(CachedResponse.class, requestPath));
+    cachedResponseRepository.delete(cachedResponse);
+    return genericMessage("Cached entry for request path %s deleted".formatted(requestPath));
   }
 }
