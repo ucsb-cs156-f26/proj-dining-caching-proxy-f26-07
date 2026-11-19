@@ -34,7 +34,8 @@ public class CachedEndpointsControllerTests extends ControllerTestCase {
 
   @WithMockUser(roles = {"ADMIN"})
   @Test
-  public void admin_can_list_cached_endpoints_with_hit_counts() throws Exception {
+  public void admin_can_list_cached_endpoints_with_response_header_and_body_and_hit_counts()
+      throws Exception {
     CachedResponse commons =
         CachedResponse.builder()
             .requestPath("/dining/commons/v1/")
@@ -62,4 +63,58 @@ public class CachedEndpointsControllerTests extends ControllerTestCase {
     String expectedJson = mapper.writeValueAsString(expected);
     assertEquals(expectedJson, response.getResponse().getContentAsString());
   }
+
+  /*
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_out_users_cannot_delete() throws Exception {
+    mockMvc
+        .perform(delete("/api/admin/endpoints/delete").param("id", "/dining/commons/v1/"))
+        .andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void logged_in_admins_can_delete() throws Exception {
+    CachedResponse commons =
+        CachedResponse.builder()
+            .requestPath("/dining/commons/v1/")
+            .responseStatus(200)
+            .responseBody("[]")
+            .hitCount(5)
+            .build();
+  // TODO: Update these tests
+    when(hostManagerRepository.findByEmail("hm@ucsb.edu")).thenReturn(Optional.of(hostManager));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                delete("/api/admin/hostmanagers/delete").param("email", "hm@ucsb.edu").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(hostManagerRepository, times(1)).findByEmail("hm@ucsb.edu");
+    verify(hostManagerRepository, times(1)).delete(hostManager);
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("HostManager with id hm@ucsb.edu deleted", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_tries_to_delete_a_hostmanager_not_found() throws Exception {
+    String email = "nonexistent@ucsb.edu";
+    when(hostManagerRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/admin/hostmanagers/delete").param("email", email).with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(hostManagerRepository, times(1)).findByEmail(email);
+    verify(hostManagerRepository, times(0)).delete(any());
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("HostManager with id nonexistent@ucsb.edu not found", json.get("message"));
+  }
+    */
 }
