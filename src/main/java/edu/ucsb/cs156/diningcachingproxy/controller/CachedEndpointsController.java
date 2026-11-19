@@ -29,18 +29,23 @@ public class CachedEndpointsController extends ApiController {
   public record CachedEndpointDTO(
       String requestPath, int responseStatus, String responseBody, long hitCount) {
     public CachedEndpointDTO(CachedResponse cachedResponse) {
-      // TODO: test truncation
-      String respBody = cachedResponse.getResponseBody();
-      if (respBody.length() > 100) {
-        String truncateMsg = "...[truncated]";
-        respBody = respBody.substring(0, 100 - truncateMsg.length()) + truncateMsg;
-      }
-
       this(
           cachedResponse.getRequestPath(),
           cachedResponse.getResponseStatus(),
-          respBody,
+          maybeTruncateResponseBody(cachedResponse.getResponseBody()),
           cachedResponse.getHitCount());
+    }
+
+    // Returns the truncated response body text if it exceeds the set maxResponseBodyLength
+    // Otherwise returns the original response body
+    private static String maybeTruncateResponseBody(String responseBody) {
+      String truncateFlag = "...[truncated]";
+      int maxResponseBodyLength = 128;
+      if (responseBody.length() > maxResponseBodyLength) {
+        responseBody =
+            responseBody.substring(0, maxResponseBodyLength - truncateFlag.length()) + truncateFlag;
+      }
+      return responseBody;
     }
   }
 
