@@ -46,7 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 
   @Operation(summary = &quot;Purge a single cached entry&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
-  @DeleteMapping(&quot;&quot;)
+  @DeleteMapping(&quot;/delete&quot;)
   public Object deleteEndpointEntry(@Parameter(name = &quot;id&quot;) @RequestParam String id) {
 <span class="nc" id="L51">    CachedResponse cachedResponse =</span>
         cachedResponseRepository
