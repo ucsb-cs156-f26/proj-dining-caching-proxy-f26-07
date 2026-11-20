@@ -92,6 +92,22 @@ export default function HomePage(): React.JSX.Element {
     [hostsEndpoint],
   );
 
+  const attemptPurge = useBackendMutation<string>(
+    (requestPath: string) => ({
+      url: `${cachedEndpointsEndpoint}/delete`,
+      method: "DELETE",
+      params: { requestPath },
+    }),
+    {
+      onSuccess: () => {
+        toast("Purged cached endpoint entry");
+      },
+    },
+    // Stryker disable next-line ArrayDeclaration: invalidateQueries([]) invalidates every
+    // query, which is behaviorally identical here since this is the only active query.
+    [cachedEndpointsEndpoint],
+  );
+
   const hostColumns = [
     { header: "Host", accessorKey: "host" },
     { header: "Count", accessorKey: "count" },
@@ -115,40 +131,26 @@ export default function HomePage(): React.JSX.Element {
     },
   ];
 
-  /*
-  export type CachedEndpoint = {
-  requestPath: string;
-  responseStatus: number;
-  responseBody: string;
-  hitCount: number;
-}
-  */
-
   const cachedEndpointColumns = [
     { header: "Request Path", accessorKey: "requestPath" },
     { header: "Hit Count", accessorKey: "hitCount" },
     { header: "Response Status", accessorKey: "responseStatus" },
     { header: "Response Body", accessorKey: "responseBody" },
-    /*
     {
       header: "",
-      id: "retry",
-      cell: ({ cell }: { cell: Cell<HostCount, unknown> }) => {
-        if (!looksLikeIpAddress(cell.row.original.host)) {
-          return null;
-        }
+      id: "purge",
+      cell: ({ cell }: { cell: Cell<CachedEndpoint, unknown> }) => {
         return (
           <Button
-            size="sm"
-            onClick={() => retryMutation.mutate(cell.row.original.host)}
-            data-testid={`HomePage-hosts-table-cell-row-${cell.row.index}-col-retry-button`}
+            variant="danger"
+            onClick={() => attemptPurge.mutate(cell.row.original.requestPath) }
+            data-testid={`HomePage-cachedEntries-table-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
           >
-            Retry
+            Purge
           </Button>
         );
       },
     },
-    */
   ];
 
   return (
