@@ -144,7 +144,7 @@ export default function HomePage(): React.JSX.Element {
           <Button
             variant="danger"
             onClick={() => attemptPurge.mutate(cell.row.original.requestPath)}
-            data-testid={`HomePage-cachedEntries-table-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
+            data-testid={`HomePage-cachedEndpoints-table-cell-row-${cell.row.index}-col-purge-button`}
           >
             Purge
           </Button>
@@ -196,11 +196,11 @@ export default function HomePage(): React.JSX.Element {
             <h2>Cached Endpoints</h2>
             <OurTable
               // Stryker disable next-line ArrayDeclaration: initialData=[] above guarantees
-              // cachedEntryCounts is never actually undefined at runtime; this is TypeScript-only
+              // cachedEndpoints is never actually undefined at runtime; this is TypeScript-only
               // defensiveness (the useBackend generic wrapper defeats initialData narrowing).
               data={cachedEndpoints ?? []}
               columns={cachedEndpointColumns}
-              testid="HomePage-cachedEntries-table"
+              testid="HomePage-cachedEndpoints-table"
             />
           </>
         )}
