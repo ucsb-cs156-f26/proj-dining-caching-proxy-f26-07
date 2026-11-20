@@ -24,6 +24,7 @@ describe("HomePage tests", () => {
   const axiosMock = new AxiosMockAdapter(axios);
   const statsEndpoint = "/api/stats";
   const hostsEndpoint = "/api/admin/hosts";
+  const cachedEndpointsEndpoint = "/api/admin/endpoints";
 
   const setupUser = () => {
     axiosMock.reset();
@@ -125,7 +126,7 @@ describe("HomePage tests", () => {
     );
   });
 
-  test("regular users do not see the requesting-hosts table", async () => {
+  test("regular users do not see the requesting-hosts and cached-endpoints table", async () => {
     setupUser();
     axiosMock.onGet(statsEndpoint).reply(200, {
       totalRequests: 0,
@@ -146,12 +147,23 @@ describe("HomePage tests", () => {
       expect(screen.getByTestId("HomePage-totalRequests")).toBeInTheDocument();
     });
     expect(screen.queryByText("Requesting Hosts")).not.toBeInTheDocument();
+    expect(screen.queryByText("Cached Endpoints")).not.toBeInTheDocument();
     expect(
       axiosMock.history.get.filter((r) => r.url === hostsEndpoint),
+    ).toHaveLength(0);
+    expect(
+      axiosMock.history.get.filter((r) => r.url === cachedEndpointsEndpoint),
     ).toHaveLength(0);
     expect(useBackendSpy).toHaveBeenCalledWith(
       [hostsEndpoint],
       { method: "GET", url: hostsEndpoint },
+      [],
+      false,
+      { enabled: false },
+    );
+    expect(useBackendSpy).toHaveBeenCalledWith(
+      [cachedEndpointsEndpoint],
+      { method: "GET", url: cachedEndpointsEndpoint },
       [],
       false,
       { enabled: false },
@@ -167,6 +179,7 @@ describe("HomePage tests", () => {
       hitRatePercentage: 0,
     });
     axiosMock.onGet(hostsEndpoint).timeout();
+    axiosMock.onGet(cachedEndpointsEndpoint).reply(200, []);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
       .mockImplementation(() => {});
@@ -207,6 +220,7 @@ describe("HomePage tests", () => {
       // if the pattern is start-anchored.
       { host: "prefix123.45.167.89", count: 1 },
     ]);
+    axiosMock.onGet(cachedEndpointsEndpoint).reply(200, []);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -261,6 +275,7 @@ describe("HomePage tests", () => {
       .onGet(hostsEndpoint)
       .reply(200, [{ host: "203.0.113.5", count: 3 }]);
     axiosMock.onPost(`${hostsEndpoint}/resolve`).reply(200, {});
+    axiosMock.onGet(cachedEndpointsEndpoint).reply(200, []);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -280,6 +295,201 @@ describe("HomePage tests", () => {
     expect(axiosMock.history.post[0].params).toEqual({ ip: "203.0.113.5" });
     await waitFor(() =>
       expect(mockToast).toHaveBeenCalledWith("Requested hostname resolution"),
+    );
+  });
+
+  test("a failed endpoints fetch surfaces an error the same as any other useBackend call", async () => {
+    setupAdmin();
+    axiosMock.onGet(statsEndpoint).reply(200, {
+      totalRequests: 0,
+      cacheHits: 0,
+      cacheMisses: 0,
+      hitRatePercentage: 0,
+    });
+    axiosMock.onGet(hostsEndpoint).reply(200, []);
+    axiosMock.onGet(cachedEndpointsEndpoint).timeout();
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HomePage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        axiosMock.history.get.filter((r) => r.url === cachedEndpointsEndpoint)
+          .length,
+      ).toBeGreaterThanOrEqual(1);
+    });
+    await waitFor(() => expect(mockToast).toHaveBeenCalled());
+    consoleErrorSpy.mockRestore();
+  });
+
+  test("admins see the cached-endpoints table, with a purge button per row", async () => {
+    setupAdmin();
+    axiosMock.onGet(statsEndpoint).reply(200, {
+      totalRequests: 0,
+      cacheHits: 0,
+      cacheMisses: 0,
+      hitRatePercentage: 0,
+    });
+    axiosMock.onGet(hostsEndpoint).reply(200, []);
+    axiosMock.onGet(cachedEndpointsEndpoint).reply(200, [
+      {
+        requestPath: "/dining/menu/v1/2026-11-16/carrillo",
+        responseStatus: 200,
+        responseBody:
+          '[{"name":"Breakfast","code":"breakfast"},{"name":"Lunch","code":"lunch"},{"name":"Dinner","code":"dinner"}]',
+        hitCount: 1,
+      },
+      {
+        requestPath: "/dining/menu/v1/2026-11-16/de-la-guerra",
+        responseStatus: 200,
+        responseBody:
+          '[{"name":"Breakfast","code":"breakfast"},{"name":"Lunch","code":"lunch"},{"name":"Dinner","code":"dinner"}]',
+        hitCount: 2,
+      },
+      {
+        requestPath: "/dining/menu/v1/2026-11-16/carrillo/breakfast",
+        responseStatus: 200,
+        responseBody:
+          '[{"name":"Oatmeal (vgn)","station":"Grill (Cafe)"},{"name":"Cream of Wheat (vgn)","station":"Grill (Cafe)"},{"name...[truncated]',
+        hitCount: 3,
+      },
+      {
+        requestPath: "/dining/menu/v1/2026-11-20/de-la-guerra/lunch",
+        responseStatus: 200,
+        responseBody:
+          '[{"name":"New England Clam Chowder","station":"Blue Plate Special"},{"name":"Chicken & Wild Mushroom Risotto","sta...[truncated]',
+        hitCount: 4,
+      },
+    ]);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HomePage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId(
+          "HomePage-cachedEndpoints-table-cell-row-0-col-requestPath",
+        ),
+      ).toHaveTextContent("/dining/menu/v1/2026-11-16/carrillo");
+    });
+    expect(
+      screen.getByTestId(
+        "HomePage-cachedEndpoints-table-cell-row-1-col-requestPath",
+      ),
+    ).toHaveTextContent("/dining/menu/v1/2026-11-16/de-la-guerra");
+    expect(
+      screen.getByTestId(
+        "HomePage-cachedEndpoints-table-cell-row-1-col-responseStatus",
+      ),
+    ).toHaveTextContent("200");
+    expect(
+      screen.getByTestId(
+        "HomePage-cachedEndpoints-table-cell-row-1-col-responseBody",
+      ),
+    ).toHaveTextContent(
+      '[{"name":"Breakfast","code":"breakfast"},{"name":"Lunch","code":"lunch"},{"name":"Dinner","code":"dinner"}]',
+    );
+    expect(
+      screen.getByTestId(
+        "HomePage-cachedEndpoints-table-cell-row-1-col-hitCount",
+      ),
+    ).toHaveTextContent("2");
+
+    expect(
+      screen.queryByTestId(
+        "HomePage-cachedEndpoints-table-cell-row-0-col-purge-button",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId(
+        "HomePage-cachedEndpoints-table-cell-row-1-col-purge-button",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId(
+        "HomePage-cachedEndpoints-table-cell-row-2-col-purge-button",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId(
+        "HomePage-cachedEndpoints-table-cell-row-3-col-purge-button",
+      ),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByTestId("HomePage-cachedEndpoints-table-header-requestPath"),
+    ).toHaveTextContent("Request Path");
+    expect(
+      screen.getByTestId("HomePage-cachedEndpoints-table-header-hitCount"),
+    ).toHaveTextContent("Hit Count");
+    expect(
+      screen.getByTestId(
+        "HomePage-cachedEndpoints-table-header-responseStatus",
+      ),
+    ).toHaveTextContent("Response Status");
+    expect(
+      screen.getByTestId("HomePage-cachedEndpoints-table-header-responseBody"),
+    ).toHaveTextContent("Response Body");
+    expect(
+      screen.getByTestId("HomePage-cachedEndpoints-table-header-purge"),
+    ).toHaveTextContent("");
+  });
+
+  test("clicking purge calls the delete endpoint for that cached endpoint entry", async () => {
+    setupAdmin();
+    axiosMock.onGet(statsEndpoint).reply(200, {
+      totalRequests: 0,
+      cacheHits: 0,
+      cacheMisses: 0,
+      hitRatePercentage: 0,
+    });
+    axiosMock.onGet(hostsEndpoint).reply(200, []);
+    axiosMock.onGet(cachedEndpointsEndpoint).reply(200, [
+      {
+        requestPath: "/dining/menu/v1/2026-11-16/carrillo",
+        responseStatus: 200,
+        responseBody:
+          '[{"name":"Breakfast","code":"breakfast"},{"name":"Lunch","code":"lunch"},{"name":"Dinner","code":"dinner"}]',
+        hitCount: 1,
+      },
+    ]);
+    axiosMock.onDelete(`${cachedEndpointsEndpoint}/delete`).reply(200, {});
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HomePage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const purgeButton = await screen.findByTestId(
+      "HomePage-cachedEndpoints-table-cell-row-0-col-purge-button",
+    );
+    fireEvent.click(purgeButton);
+
+    await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
+    expect(axiosMock.history.delete[0].url).toBe(
+      `${cachedEndpointsEndpoint}/delete`,
+    );
+    expect(axiosMock.history.delete[0].params).toEqual({
+      requestPath: "/dining/menu/v1/2026-11-16/carrillo",
+    });
+    await waitFor(() =>
+      expect(mockToast).toHaveBeenCalledWith("Purged cached endpoint entry"),
     );
   });
 });
