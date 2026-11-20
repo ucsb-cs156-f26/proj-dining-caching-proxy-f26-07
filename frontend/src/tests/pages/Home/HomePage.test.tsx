@@ -457,17 +457,15 @@ describe("HomePage tests", () => {
       hitRatePercentage: 0,
     });
     axiosMock.onGet(hostsEndpoint).reply(200, []);
-    axiosMock
-      .onGet(cachedEndpointsEndpoint)
-      .reply(200, [
-        {
-          requestPath: "/dining/menu/v1/2026-11-16/carrillo",
-          responseStatus: 200,
-          responseBody:
-            '[{"name":"Breakfast","code":"breakfast"},{"name":"Lunch","code":"lunch"},{"name":"Dinner","code":"dinner"}]',
-          hitCount: 1,
-        },
-      ]);
+    axiosMock.onGet(cachedEndpointsEndpoint).reply(200, [
+      {
+        requestPath: "/dining/menu/v1/2026-11-16/carrillo",
+        responseStatus: 200,
+        responseBody:
+          '[{"name":"Breakfast","code":"breakfast"},{"name":"Lunch","code":"lunch"},{"name":"Dinner","code":"dinner"}]',
+        hitCount: 1,
+      },
+    ]);
     axiosMock.onDelete(`${cachedEndpointsEndpoint}/delete`).reply(200, {});
 
     render(
