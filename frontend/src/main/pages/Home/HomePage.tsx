@@ -143,7 +143,7 @@ export default function HomePage(): React.JSX.Element {
         return (
           <Button
             variant="danger"
-            onClick={() => attemptPurge.mutate(cell.row.original.requestPath) }
+            onClick={() => attemptPurge.mutate(cell.row.original.requestPath)}
             data-testid={`HomePage-cachedEntries-table-cell-row-${cell.row.index}-col-${cell.column.id}-button`}
           >
             Purge
