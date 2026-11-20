@@ -322,7 +322,8 @@ describe("HomePage tests", () => {
 
     await waitFor(() => {
       expect(
-        axiosMock.history.get.filter((r) => r.url === cachedEndpointsEndpoint).length,
+        axiosMock.history.get.filter((r) => r.url === cachedEndpointsEndpoint)
+          .length,
       ).toBeGreaterThanOrEqual(1);
     });
     await waitFor(() => expect(mockToast).toHaveBeenCalled());
@@ -339,10 +340,34 @@ describe("HomePage tests", () => {
     });
     axiosMock.onGet(hostsEndpoint).reply(200, []);
     axiosMock.onGet(cachedEndpointsEndpoint).reply(200, [
-      { requestPath: "/dining/menu/v1/2026-11-16/carrillo", responseStatus: 200, responseBody: "[{\"name\":\"Breakfast\",\"code\":\"breakfast\"},{\"name\":\"Lunch\",\"code\":\"lunch\"},{\"name\":\"Dinner\",\"code\":\"dinner\"}]", hitCount: 1},
-      { requestPath: "/dining/menu/v1/2026-11-16/de-la-guerra", responseStatus: 200, responseBody: "[{\"name\":\"Breakfast\",\"code\":\"breakfast\"},{\"name\":\"Lunch\",\"code\":\"lunch\"},{\"name\":\"Dinner\",\"code\":\"dinner\"}]", hitCount: 2},
-      { requestPath: "/dining/menu/v1/2026-11-16/carrillo/breakfast", responseStatus: 200, responseBody: "[{\"name\":\"Oatmeal (vgn)\",\"station\":\"Grill (Cafe)\"},{\"name\":\"Cream of Wheat (vgn)\",\"station\":\"Grill (Cafe)\"},{\"name...[truncated]", hitCount: 3},
-      { requestPath: "/dining/menu/v1/2026-11-20/de-la-guerra/lunch", responseStatus: 200, responseBody: "[{\"name\":\"New England Clam Chowder\",\"station\":\"Blue Plate Special\"},{\"name\":\"Chicken & Wild Mushroom Risotto\",\"sta...[truncated]", hitCount: 4},
+      {
+        requestPath: "/dining/menu/v1/2026-11-16/carrillo",
+        responseStatus: 200,
+        responseBody:
+          '[{"name":"Breakfast","code":"breakfast"},{"name":"Lunch","code":"lunch"},{"name":"Dinner","code":"dinner"}]',
+        hitCount: 1,
+      },
+      {
+        requestPath: "/dining/menu/v1/2026-11-16/de-la-guerra",
+        responseStatus: 200,
+        responseBody:
+          '[{"name":"Breakfast","code":"breakfast"},{"name":"Lunch","code":"lunch"},{"name":"Dinner","code":"dinner"}]',
+        hitCount: 2,
+      },
+      {
+        requestPath: "/dining/menu/v1/2026-11-16/carrillo/breakfast",
+        responseStatus: 200,
+        responseBody:
+          '[{"name":"Oatmeal (vgn)","station":"Grill (Cafe)"},{"name":"Cream of Wheat (vgn)","station":"Grill (Cafe)"},{"name...[truncated]',
+        hitCount: 3,
+      },
+      {
+        requestPath: "/dining/menu/v1/2026-11-20/de-la-guerra/lunch",
+        responseStatus: 200,
+        responseBody:
+          '[{"name":"New England Clam Chowder","station":"Blue Plate Special"},{"name":"Chicken & Wild Mushroom Risotto","sta...[truncated]',
+        hitCount: 4,
+      },
     ]);
 
     render(
@@ -384,16 +409,24 @@ describe("HomePage tests", () => {
     ).toHaveTextContent("2");
 
     expect(
-      screen.queryByTestId("HomePage-cachedEndpoints-table-cell-row-0-col-purge-button"),
+      screen.queryByTestId(
+        "HomePage-cachedEndpoints-table-cell-row-0-col-purge-button",
+      ),
     ).toBeInTheDocument();
     expect(
-      screen.queryByTestId("HomePage-cachedEndpoints-table-cell-row-1-col-purge-button"),
+      screen.queryByTestId(
+        "HomePage-cachedEndpoints-table-cell-row-1-col-purge-button",
+      ),
     ).toBeInTheDocument();
     expect(
-      screen.queryByTestId("HomePage-cachedEndpoints-table-cell-row-2-col-purge-button"),
+      screen.queryByTestId(
+        "HomePage-cachedEndpoints-table-cell-row-2-col-purge-button",
+      ),
     ).toBeInTheDocument();
     expect(
-      screen.queryByTestId("HomePage-cachedEndpoints-table-cell-row-3-col-purge-button"),
+      screen.queryByTestId(
+        "HomePage-cachedEndpoints-table-cell-row-3-col-purge-button",
+      ),
     ).toBeInTheDocument();
 
     expect(
@@ -424,7 +457,17 @@ describe("HomePage tests", () => {
       hitRatePercentage: 0,
     });
     axiosMock.onGet(hostsEndpoint).reply(200, []);
-    axiosMock.onGet(cachedEndpointsEndpoint).reply(200, [{ requestPath: "/dining/menu/v1/2026-11-16/carrillo", responseStatus: 200, responseBody: "[{\"name\":\"Breakfast\",\"code\":\"breakfast\"},{\"name\":\"Lunch\",\"code\":\"lunch\"},{\"name\":\"Dinner\",\"code\":\"dinner\"}]", hitCount: 1}]);
+    axiosMock
+      .onGet(cachedEndpointsEndpoint)
+      .reply(200, [
+        {
+          requestPath: "/dining/menu/v1/2026-11-16/carrillo",
+          responseStatus: 200,
+          responseBody:
+            '[{"name":"Breakfast","code":"breakfast"},{"name":"Lunch","code":"lunch"},{"name":"Dinner","code":"dinner"}]',
+          hitCount: 1,
+        },
+      ]);
     axiosMock.onDelete(`${cachedEndpointsEndpoint}/delete`).reply(200, {});
 
     render(
@@ -441,8 +484,12 @@ describe("HomePage tests", () => {
     fireEvent.click(purgeButton);
 
     await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
-    expect(axiosMock.history.delete[0].url).toBe(`${cachedEndpointsEndpoint}/delete`);
-    expect(axiosMock.history.delete[0].params).toEqual({ requestPath: "/dining/menu/v1/2026-11-16/carrillo" });
+    expect(axiosMock.history.delete[0].url).toBe(
+      `${cachedEndpointsEndpoint}/delete`,
+    );
+    expect(axiosMock.history.delete[0].params).toEqual({
+      requestPath: "/dining/menu/v1/2026-11-16/carrillo",
+    });
     await waitFor(() =>
       expect(mockToast).toHaveBeenCalledWith("Purged cached endpoint entry"),
     );
