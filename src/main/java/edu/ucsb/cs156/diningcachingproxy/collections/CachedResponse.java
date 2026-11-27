@@ -31,4 +31,5 @@ public class CachedResponse {
   // Times this request path has been served (1 on first cache, incremented on every
   // subsequent cache hit) — feeds the admin endpoint-inventory view (issue #2).
   private long hitCount;
+  private long missCount;
 }
