@@ -2,13 +2,17 @@
 
 import edu.ucsb.cs156.diningcachingproxy.collections.CachedResponse;
 import edu.ucsb.cs156.diningcachingproxy.collections.CachedResponseRepository;
+import edu.ucsb.cs156.diningcachingproxy.errors.EntityNotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -18,21 +22,51 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = &quot;Admin - Cached Endpoints&quot;)
 @RequestMapping(&quot;/api/admin/endpoints&quot;)
 @RestController
-<span class="fc" id="L21">public class CachedEndpointsController {</span>
+<span class="fc" id="L25">public class CachedEndpointsController extends ApiController {</span>
 
   @Autowired private CachedResponseRepository cachedResponseRepository;
 
-<span class="fc" id="L25">  public record CachedEndpointDTO(String requestPath, long hitCount) {</span>
+<span class="fc" id="L29">  public record CachedEndpointDTO(</span>
+      String requestPath, int responseStatus, String responseBody, long hitCount) {
     public CachedEndpointDTO(CachedResponse cachedResponse) {
-<span class="fc" id="L27">      this(cachedResponse.getRequestPath(), cachedResponse.getHitCount());</span>
-<span class="fc" id="L28">    }</span>
+<span class="fc" id="L32">      this(</span>
+<span class="fc" id="L33">          cachedResponse.getRequestPath(),</span>
+<span class="fc" id="L34">          cachedResponse.getResponseStatus(),</span>
+<span class="fc" id="L35">          maybeTruncateResponseBody(cachedResponse.getResponseBody()),</span>
+<span class="fc" id="L36">          cachedResponse.getHitCount());</span>
+<span class="fc" id="L37">    }</span>
+
+    // Returns the truncated response body text if it exceeds the set maxResponseBodyLength
+    // Otherwise returns the original response body
+    private static String maybeTruncateResponseBody(String responseBody) {
+<span class="fc" id="L42">      String truncateFlag = &quot;...[truncated]&quot;;</span>
+<span class="fc" id="L43">      int maxResponseBodyLength = 128;</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">      if (responseBody.length() &gt; maxResponseBodyLength) {</span>
+<span class="fc" id="L45">        responseBody =</span>
+<span class="fc" id="L46">            responseBody.substring(0, maxResponseBodyLength - truncateFlag.length()) + truncateFlag;</span>
+      }
+<span class="fc" id="L48">      return responseBody;</span>
+    }
   }
 
   @Operation(summary = &quot;List all API endpoints the proxy has cached, with hit counts&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @GetMapping(&quot;&quot;)
   public List&lt;CachedEndpointDTO&gt; allEndpoints() {
-<span class="fc" id="L35">    return cachedResponseRepository.findAll().stream().map(CachedEndpointDTO::new).toList();</span>
+<span class="fc" id="L56">    return cachedResponseRepository.findAll().stream().map(CachedEndpointDTO::new).toList();</span>
+  }
+
+  @Operation(summary = &quot;Delete a single cached endpoint entry&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+  @DeleteMapping(&quot;/delete&quot;)
+  public Object deleteEndpointEntry(
+      @Parameter(name = &quot;requestPath&quot;) @RequestParam String requestPath) {
+<span class="fc" id="L64">    CachedResponse cachedResponse =</span>
+        cachedResponseRepository
+<span class="fc" id="L66">            .findByRequestPath(requestPath)</span>
+<span class="fc" id="L67">            .orElseThrow(() -&gt; new EntityNotFoundException(CachedResponse.class, requestPath));</span>
+<span class="fc" id="L68">    cachedResponseRepository.delete(cachedResponse);</span>
+<span class="fc" id="L69">    return genericMessage(&quot;Cached entry for request path %s deleted&quot;.formatted(requestPath));</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
