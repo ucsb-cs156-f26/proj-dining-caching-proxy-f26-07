@@ -25,7 +25,15 @@ export type HostCount = {
   count: number;
 };
 
+export type CachedEndpoint = {
+  requestPath: string;
+  responseStatus: number;
+  responseBody: string;
+  hitCount: number;
+};
+
 const hostsEndpoint = "/api/admin/hosts";
+const cachedEndpointsEndpoint = "/api/admin/endpoints";
 
 // A host that hasn't (yet, or successfully) resolved to a hostname still displays as its own
 // raw IPv4 address - that's exactly the signal to show a retry button for it.
@@ -56,6 +64,18 @@ export default function HomePage(): React.JSX.Element {
     { enabled: isAdmin },
   );
 
+  const { data: cachedEndpoints } = useBackend<CachedEndpoint[]>(
+    // Stryker disable next-line ArrayDeclaration: this is the only query using this key in
+    // any given test, so an empty key behaves identically in isolation.
+    [cachedEndpointsEndpoint],
+    // Stryker disable next-line StringLiteral: axios treats a falsy method as "GET"
+    { method: "GET", url: cachedEndpointsEndpoint },
+    // Stryker disable next-line all : don't test default value of empty list
+    [],
+    false,
+    { enabled: isAdmin },
+  );
+
   const retryMutation = useBackendMutation<string>(
     (ip: string) => ({
       url: `${hostsEndpoint}/resolve`,
@@ -70,6 +90,22 @@ export default function HomePage(): React.JSX.Element {
     // Stryker disable next-line ArrayDeclaration: invalidateQueries([]) invalidates every
     // query, which is behaviorally identical here since this is the only active query.
     [hostsEndpoint],
+  );
+
+  const attemptPurge = useBackendMutation<string>(
+    (requestPath: string) => ({
+      url: `${cachedEndpointsEndpoint}/delete`,
+      method: "DELETE",
+      params: { requestPath },
+    }),
+    {
+      onSuccess: () => {
+        toast("Purged cached endpoint entry");
+      },
+    },
+    // Stryker disable next-line ArrayDeclaration: invalidateQueries([]) invalidates every
+    // query, which is behaviorally identical here since this is the only active query.
+    [cachedEndpointsEndpoint],
   );
 
   const hostColumns = [
@@ -89,6 +125,28 @@ export default function HomePage(): React.JSX.Element {
             data-testid={`HomePage-hosts-table-cell-row-${cell.row.index}-col-retry-button`}
           >
             Retry
+          </Button>
+        );
+      },
+    },
+  ];
+
+  const cachedEndpointColumns = [
+    { header: "Request Path", accessorKey: "requestPath" },
+    { header: "Hit Count", accessorKey: "hitCount" },
+    { header: "Response Status", accessorKey: "responseStatus" },
+    { header: "Response Body", accessorKey: "responseBody" },
+    {
+      header: "",
+      id: "purge",
+      cell: ({ cell }: { cell: Cell<CachedEndpoint, unknown> }) => {
+        return (
+          <Button
+            variant="danger"
+            onClick={() => attemptPurge.mutate(cell.row.original.requestPath)}
+            data-testid={`HomePage-cachedEndpoints-table-cell-row-${cell.row.index}-col-purge-button`}
+          >
+            Purge
           </Button>
         );
       },
@@ -134,6 +192,15 @@ export default function HomePage(): React.JSX.Element {
               data={hostCounts ?? []}
               columns={hostColumns}
               testid="HomePage-hosts-table"
+            />
+            <h2>Cached Endpoints</h2>
+            <OurTable
+              // Stryker disable next-line ArrayDeclaration: initialData=[] above guarantees
+              // cachedEndpoints is never actually undefined at runtime; this is TypeScript-only
+              // defensiveness (the useBackend generic wrapper defeats initialData narrowing).
+              data={cachedEndpoints ?? []}
+              columns={cachedEndpointColumns}
+              testid="HomePage-cachedEndpoints-table"
             />
           </>
         )}
