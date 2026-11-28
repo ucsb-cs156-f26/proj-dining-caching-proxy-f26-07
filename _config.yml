@@ -20,4 +20,4 @@ repo_name: "TBD"
 repo: ucsb-cs156-f26/proj-dining-caching-proxy-f26-07
 owner: ucsb-cs156-f26
 repo_name: proj-dining-caching-proxy-f26-07
-pull_requests: [{"author":{"id":"MDQ6VXNlcjM2NjExMzI1","is_bot":false,"login":"Sir-Edward-123","name":"Riley Zhu"},"headRefName":"rz-frontend-browse-cached-responses-and-manual-purge","number":27,"title":"rz - [FRONTEND] Let admins browse cached responses and manually purge individual entries","url":"https://github.com/ucsb-cs156-f26/proj-dining-caching-proxy-f26-07/pull/27"}]
+pull_requests: []
